@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: docker.io/jellyfin/jellyfin
-  tag: latest
+  tag: "2024070805"
   pullPolicy: IfNotPresent
 
 nameOverride: ""
@@ -19,25 +19,11 @@ fullnameOverride: ""
 enableDLNA: false
 
 service:
-  type: ClusterIP
   port: 8096
-  ## Specify the nodePort value for the LoadBalancer and NodePort service types.
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
-  ##
-  # nodePort:
-  ## Provide any additional annotations which may be required. This can be used to
-  ## set the LoadBalancer service type to internal only.
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
-  ##
-  annotations: {}
-  labels: {}
-  ## Use loadBalancerIP to request a specific static IP,
-  ## otherwise leave blank
-  ##
-  loadBalancerIP:
-  # loadBalancerSourceRanges: []
-  ## Set the externalTrafficPolicy in the Service to either Cluster or Local
-  # externalTrafficPolicy: Cluster
+  loadBalancerIP: 192.168.86.7
+  annotations:
+    metallb.universe.tf/allow-shared-ip: jellyfin-svc
+  type: LoadBalancer
 
 ingress:
   enabled: false
@@ -54,7 +40,7 @@ ingress:
 
 persistence:
   config:
-    enabled: false
+    enabled: true
     ## jellyfin configuration data Persistent Volume Storage Class
     ## If defined, storageClassName: <storageClass>
     ## If set to "-", storageClassName: "", which disables dynamic provisioning
@@ -79,11 +65,11 @@ persistence:
     ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
     ##   GKE, AWS & OpenStack)
     ##
-    # storageClass: "-"
+    storageClass: "-"
     ##
     ## If you want to reuse an existing claim, you can pass the name of the PVC using
     ## the existingClaim variable
-    # existingClaim: your-claim
+    existingClaim: media-nfs
     # subPath: some-subpath
     accessMode: ReadWriteOnce
     size: 10Gi
@@ -95,17 +81,13 @@ persistence:
     #   existingClaim:
     #   readOnly: true
 
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #  cpu: 100m
-  #  memory: 128Mi
-  # requests:
-  #  cpu: 100m
-  #  memory: 128Mi
+resources:
+  limits:
+   cpu: 4000m
+   memory: 6Gi
+  requests:
+   cpu: 200m
+   memory: 6Gi
 
 nodeSelector: {}
 
@@ -113,12 +95,77 @@ tolerations: []
 
 affinity: {}
 
-extraVolumes: []
-  #- name: renderD129
-  #  hostPath:
-  #    path: /dev/dri/renderD129
+extraVolumes:
+  - name: media-nfs
+    nfs:
+      server: 192.168.86.61
+      path: /volume1/Media
+  - name: renderd129
+    hostPath:
+      path: /dev/dri/renderD129
+  - name: dmaheap
+    hostPath:
+      path: /dev/dma_heap
+  - name: mali0
+    hostPath:
+      path: /dev/mali0
+  - name: rga
+    hostPath:
+      path: /dev/rga
+  - name: mppservice
+    hostPath:
+      path: /dev/mpp_service
+  - name: iep
+    hostPath:
+      path: /dev/iep
+  - name: vpuservice
+    hostPath:
+      path: /dev/vpu_service
+  - name: hevcservice
+    hostPath:
+      path: /dev/hevc_service
+  - name: rkvdec
+    hostPath:
+      path: /dev/rkvdec
+  - name: rkvenc
+    hostPath:
+      path: /dev/rkvenc
+  - name: vepu
+    hostPath:
+      path: /dev/vepu
+  - name: h265e
+    hostPath:
+      path: /dev/h265e
 
-extraVolumeMounts: []
-  #- mountPath: /dev/dri/renderD129
-  #  name: renderD129
+extraVolumeMounts:
+  - mountPath: /media-nfs
+    name: media-nfs
+  - mountPath: /dev/dri/renderD129
+    name: renderd129
+  - mountPath: /dev/dma_heap
+    name: dmaheap
+  - mountPath: /dev/mali0
+    name: mali0
+  - mountPath: /dev/rga
+    name: rga
+  - mountPath: /dev/mpp_service
+    name: mppservice
+  - mountPath: /dev/iep
+    name: iep
+  - mountPath: /dev/vpu_service
+    name: vpuservice
+  - mountPath: /dev/hevc_service
+    name: hevcservice
+  - mountPath: /dev/rkvdec
+    name: rkvdec
+  - mountPath: /dev/rkvenc
+    name: rkvenc
+  - mountPath: /dev/vepu
+    name: vepu
+  - mountPath: /dev/h265e
+    name: h265e
 
+securityContext:
+  privileged: true
+  runAsUser: 1000
+  runAsGroup: 1000
