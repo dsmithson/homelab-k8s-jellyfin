@@ -7,28 +7,28 @@ This is a helm chart for [Jellyfin](https://github.com/jellyfin/jellyfin/)
 - Kubernetes 1.19+
 - Helm 3+
 
-## TL;DR;
-
-```shell
-$ git clone https://github.com/brianmcarey/jellyfin-helm.git
-$ helm install ./jellyfin-helm
-```
-
 ## Installing the Chart
 
-To install the chart with the release name `my-release`:
+To install the chart with the release name `jellyfin-release`:
 
 ```console
 git clone https://github.com/brianmcarey/jellyfin-helm.git
-helm install  my-release ./jellyfin-helm
+helm install  jellyfin-release ./
 ```
 
-## Uninstalling the Chart
+## Upgrading the Chart
 
-To uninstall/delete the `my-release` deployment:
+To upgrade the chart:
 
 ```console
-helm delete my-release
+helm upgrade -n jellyfin jellyfin-release ./ -f ./values.yaml
+```
+## Uninstalling the Chart
+
+To uninstall/delete the `jellyfin-release` deployment:
+
+```console
+helm delete jellyfin-release
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
